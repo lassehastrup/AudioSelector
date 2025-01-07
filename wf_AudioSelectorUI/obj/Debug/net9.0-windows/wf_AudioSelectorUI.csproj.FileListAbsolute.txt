@@ -36,3 +36,4 @@ C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-w
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.pdb
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.genruntimeconfig.cache
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\ref\wf_AudioSelectorUI.dll
+C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.sourcelink.json

@@ -49,7 +49,17 @@ namespace wf_AudioSelectorUI
             var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
             if (_deviceShortcuts.TryGetValue(selectedDeviceName, out var keys))
             {
-                labelShortcut.Text = string.Join(", ", keys);
+                var keyNamesMap = new Dictionary<Keys, string>
+                {
+                    { Keys.Control, "Ctrl" },
+                    { Keys.ControlKey, "Ctrl" },
+                    { Keys.Shift, "Shift" },
+                    { Keys.ShiftKey, "Shift" },
+                    { Keys.Alt, "Alt" },
+                    { Keys.Menu, "Alt" }
+                };
+                var keyNames = keys.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString());
+                labelShortcut.Text = string.Join(", ", keyNames);
             }
             else
             {
@@ -73,7 +83,8 @@ namespace wf_AudioSelectorUI
             _isRecording = !_isRecording;
             buttonAddKeyBindingToList.Text = _isRecording ? "Done adding" : "Add keybinding";
             labelShortcut.Text = _isRecording ? "Press a key combination..." : "Press 'Add keybinding' to start";
-            labelShortcut.BackColor = _isRecording ? System.Drawing.Color.LightYellow : System.Drawing.Color.Transparent;
+            labelShortcut.BackColor =
+                _isRecording ? System.Drawing.Color.LightYellow : System.Drawing.Color.Transparent;
 
             // Update the ListView when done adding key bindings
             if (!_isRecording)
@@ -130,14 +141,23 @@ namespace wf_AudioSelectorUI
             var keyNames = new List<string>();
 
             // Check for specific key values and add their names to the list
-            if (keyNamesMap.ContainsKey(keyData))
+            foreach (var key in keyNamesMap.Keys)
             {
-                keyNames.Add(keyNamesMap[keyData]);
+                if (keyData.HasFlag(key))
+                {
+                    keyNames.Add(keyNamesMap[key]);
+                }
             }
-            else
+
+            // Remove the modifier keys from keyData to get the non-modifier key
+            var nonModifierKey = keyData & ~Keys.Control & ~Keys.Shift & ~Keys.Alt;
+            if (nonModifierKey != Keys.None && !keyNamesMap.ContainsKey(nonModifierKey))
             {
-                keyNames.Add(keyData.ToString());
+                keyNames.Add(nonModifierKey.ToString());
             }
+
+            // Remove duplicates
+            keyNames = keyNames.Distinct().ToList();
 
             // Join the key names with " + " and update the label
             var formattedKeys = string.Join(" + ", keyNames);
@@ -158,7 +178,9 @@ namespace wf_AudioSelectorUI
             _deviceShortcuts[selectedDeviceName] = new List<Keys> { keyData };
 
             // Update the label with the key combination
-            labelShortcut.Text = string.Join(" + ", _deviceShortcuts[selectedDeviceName].Select(k => k.ToString()));
+            labelShortcut.Text = string.Join(" + ",
+                _deviceShortcuts[selectedDeviceName]
+                    .Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()));
             UpdateListView(); // Update the ListView whenever a new keybinding is added
             return true; // Indicate that the key has been handled
         }

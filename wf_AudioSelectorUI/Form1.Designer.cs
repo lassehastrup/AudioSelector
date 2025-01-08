@@ -12,6 +12,9 @@
         private System.Windows.Forms.ColumnHeader columnHeaderDevice;
         private System.Windows.Forms.ColumnHeader columnHeaderKeybinds;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.GroupBox groupBoxAudioDevices;
+        private System.Windows.Forms.GroupBox groupBoxKeyBinding;
+        private System.Windows.Forms.GroupBox groupBoxKeybindsList;
 
         protected override void Dispose(bool disposing)
         {
@@ -35,22 +38,35 @@
             columnHeaderDevice = new System.Windows.Forms.ColumnHeader();
             columnHeaderKeybinds = new System.Windows.Forms.ColumnHeader();
             toolTip = new System.Windows.Forms.ToolTip(components);
+            groupBoxAudioDevices = new System.Windows.Forms.GroupBox();
+            groupBoxKeyBinding = new System.Windows.Forms.GroupBox();
+            groupBoxKeybindsList = new System.Windows.Forms.GroupBox();
             SuspendLayout();
+            //
+            // groupBoxAudioDevices
+            //
+            groupBoxAudioDevices.Controls.Add(comboBoxAudioDevices);
+            groupBoxAudioDevices.Controls.Add(buttonRefresh);
+            groupBoxAudioDevices.Controls.Add(checkBoxOnlyActiveDevices);
+            groupBoxAudioDevices.Location = new System.Drawing.Point(12, 12);
+            groupBoxAudioDevices.Name = "groupBoxAudioDevices";
+            groupBoxAudioDevices.Size = new System.Drawing.Size(320, 110);
+            groupBoxAudioDevices.TabIndex = 0;
+            groupBoxAudioDevices.TabStop = false;
+            groupBoxAudioDevices.Text = "Audio Devices";
             //
             // comboBoxAudioDevices
             //
             comboBoxAudioDevices.FormattingEnabled = true;
-            comboBoxAudioDevices.Location = new System.Drawing.Point(14, 14);
-            comboBoxAudioDevices.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            comboBoxAudioDevices.Location = new System.Drawing.Point(10, 22);
             comboBoxAudioDevices.Name = "comboBoxAudioDevices";
-            comboBoxAudioDevices.Size = new System.Drawing.Size(303, 23);
+            comboBoxAudioDevices.Size = new System.Drawing.Size(300, 23);
             comboBoxAudioDevices.TabIndex = 0;
             comboBoxAudioDevices.SelectedIndexChanged += comboBoxAudioDevices_SelectedIndexChanged;
             //
             // buttonRefresh
             //
-            buttonRefresh.Location = new System.Drawing.Point(14, 45);
-            buttonRefresh.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            buttonRefresh.Location = new System.Drawing.Point(10, 51);
             buttonRefresh.Name = "buttonRefresh";
             buttonRefresh.Size = new System.Drawing.Size(88, 27);
             buttonRefresh.TabIndex = 1;
@@ -60,8 +76,7 @@
             //
             // checkBoxOnlyActiveDevices
             //
-            checkBoxOnlyActiveDevices.Location = new System.Drawing.Point(14, 78);
-            checkBoxOnlyActiveDevices.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            checkBoxOnlyActiveDevices.Location = new System.Drawing.Point(10, 84);
             checkBoxOnlyActiveDevices.Name = "checkBoxOnlyActiveDevices";
             checkBoxOnlyActiveDevices.Size = new System.Drawing.Size(150, 24);
             checkBoxOnlyActiveDevices.TabIndex = 2;
@@ -69,38 +84,56 @@
             checkBoxOnlyActiveDevices.UseVisualStyleBackColor = true;
             checkBoxOnlyActiveDevices.CheckedChanged += checkBoxOnlyActiveDevices_CheckedChanged;
             //
+            // groupBoxKeyBinding
+            //
+            groupBoxKeyBinding.Controls.Add(labelShortcut);
+            groupBoxKeyBinding.Controls.Add(buttonAddKeyBindingToList);
+            groupBoxKeyBinding.Location = new System.Drawing.Point(12, 128);
+            groupBoxKeyBinding.Name = "groupBoxKeyBinding";
+            groupBoxKeyBinding.Size = new System.Drawing.Size(320, 80);
+            groupBoxKeyBinding.TabIndex = 1;
+            groupBoxKeyBinding.TabStop = false;
+            groupBoxKeyBinding.Text = "Key Binding";
+            //
             // labelShortcut
             //
             labelShortcut.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            labelShortcut.Location = new System.Drawing.Point(14, 108);
-            labelShortcut.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            labelShortcut.Location = new System.Drawing.Point(10, 22);
             labelShortcut.Name = "labelShortcut";
-            labelShortcut.Size = new System.Drawing.Size(303, 23);
-            labelShortcut.TabIndex = 3;
+            labelShortcut.Size = new System.Drawing.Size(300, 23);
+            labelShortcut.TabIndex = 0;
             labelShortcut.Text = "Press 'Record' to start";
             labelShortcut.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // buttonAddKeyBindingToList
             //
-            buttonAddKeyBindingToList.Location = new System.Drawing.Point(14, 140);
-            buttonAddKeyBindingToList.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            buttonAddKeyBindingToList.Location = new System.Drawing.Point(10, 51);
             buttonAddKeyBindingToList.Name = "buttonAddKeyBindingToList";
             buttonAddKeyBindingToList.Size = new System.Drawing.Size(100, 23);
-            buttonAddKeyBindingToList.TabIndex = 4;
+            buttonAddKeyBindingToList.TabIndex = 1;
             buttonAddKeyBindingToList.Text = "Add keybinding";
             buttonAddKeyBindingToList.UseVisualStyleBackColor = true;
             buttonAddKeyBindingToList.Click += ButtonaddKeyBindingToOverView;
+            //
+            // groupBoxKeybindsList
+            //
+            groupBoxKeybindsList.Controls.Add(listViewKeybinds);
+            groupBoxKeybindsList.Location = new System.Drawing.Point(12, 214);
+            groupBoxKeybindsList.Name = "groupBoxKeybindsList";
+            groupBoxKeybindsList.Size = new System.Drawing.Size(320, 150);
+            groupBoxKeybindsList.TabIndex = 2;
+            groupBoxKeybindsList.TabStop = false;
+            groupBoxKeybindsList.Text = "Keybinds List";
             //
             // listViewKeybinds
             //
             listViewKeybinds.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             columnHeaderDevice,
             columnHeaderKeybinds});
-            listViewKeybinds.Location = new System.Drawing.Point(14, 170);
-            listViewKeybinds.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            listViewKeybinds.Location = new System.Drawing.Point(10, 22);
             listViewKeybinds.Name = "listViewKeybinds";
-            listViewKeybinds.Size = new System.Drawing.Size(303, 120);
-            listViewKeybinds.TabIndex = 5;
+            listViewKeybinds.Size = new System.Drawing.Size(300, 120);
+            listViewKeybinds.TabIndex = 0;
             listViewKeybinds.UseCompatibleStateImageBehavior = false;
             listViewKeybinds.View = System.Windows.Forms.View.Details;
             //
@@ -122,18 +155,14 @@
             //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(331, 301);
-            Controls.Add(listViewKeybinds);
-            Controls.Add(buttonAddKeyBindingToList);
-            Controls.Add(labelShortcut);
-            Controls.Add(checkBoxOnlyActiveDevices);
-            Controls.Add(buttonRefresh);
-            Controls.Add(comboBoxAudioDevices);
-            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            ClientSize = new System.Drawing.Size(344, 376);
+            Controls.Add(groupBoxKeybindsList);
+            Controls.Add(groupBoxKeyBinding);
+            Controls.Add(groupBoxAudioDevices);
+            Name = "Form1";
             Text = "Audio Selector";
             Load += Form1_Load;
             ResumeLayout(false);
-            PerformLayout();
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Windows.Forms;
 using AudioSwitcher.AudioApi;
 using AudioSwitcher.AudioApi.CoreAudio;
+using System.IO;
+using System.Text.Json;
 
 namespace wf_AudioSelectorUI
 {
@@ -16,6 +18,13 @@ namespace wf_AudioSelectorUI
         {
             InitializeComponent();
             _audioController = new CoreAudioController();
+            LoadSettings();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            SaveSettings();
+            base.OnFormClosing(e);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -184,5 +193,46 @@ namespace wf_AudioSelectorUI
             UpdateListView(); // Update the ListView whenever a new keybinding is added
             return true; // Indicate that the key has been handled
         }
+
+        private const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
+
+        private void SaveSettings()
+        {
+            var settings = new AudioSelectorSettings
+            {
+                SelectedDevice = comboBoxAudioDevices.SelectedItem?.ToString(),
+                DeviceShortcuts = _deviceShortcuts
+            };
+
+            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(SettingsFilePath, json);
+        }
+
+        private void LoadSettings()
+        {
+            if (!File.Exists(SettingsFilePath)) return;
+
+            var json = File.ReadAllText(SettingsFilePath);
+            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(json);
+
+            if (settings != null)
+            {
+                _deviceShortcuts.Clear();
+                foreach (var kvp in settings.DeviceShortcuts)
+                {
+                    _deviceShortcuts[kvp.Key] = kvp.Value;
+                }
+
+                comboBoxAudioDevices.SelectedItem = settings.SelectedDevice;
+                UpdateListView();
+            }
+        }
     }
+
+    public class AudioSelectorSettings
+    {
+        public string SelectedDevice { get; set; }
+        public Dictionary<string, List<Keys>> DeviceShortcuts { get; set; }
+    }
+    
 }

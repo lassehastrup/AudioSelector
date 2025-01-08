@@ -11,6 +11,7 @@
     <ItemGroup>
         <PackageReference Include="AudioSwitcher.AudioApi.CoreAudio" Version="3.0.3" />
         <PackageReference Include="MouseKeyHook" Version="5.7.1" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0" />
     </ItemGroup>
 
 </Project>

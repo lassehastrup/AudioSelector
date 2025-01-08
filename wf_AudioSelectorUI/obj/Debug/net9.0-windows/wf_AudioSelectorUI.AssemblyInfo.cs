@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("wf_AudioSelectorUI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c58383ef540aaf967e44124bae50949513c7f2a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1c1ab9640943af6617ed9814666b58ffba7bb007")]
 [assembly: System.Reflection.AssemblyProductAttribute("wf_AudioSelectorUI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("wf_AudioSelectorUI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

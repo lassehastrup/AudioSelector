@@ -15,6 +15,7 @@
         private System.Windows.Forms.GroupBox groupBoxAudioDevices;
         private System.Windows.Forms.GroupBox groupBoxKeyBinding;
         private System.Windows.Forms.GroupBox groupBoxKeybindsList;
+        private System.Windows.Forms.Button buttonClearKeyBindings;
 
         protected override void Dispose(bool disposing)
         {
@@ -150,6 +151,21 @@
             // toolTip
             //
             toolTip.SetToolTip(buttonAddKeyBindingToList, "Click to add a new keybinding");
+            
+            // 
+            // claerButton
+            //
+            // Add the Clear button
+            buttonClearKeyBindings = new System.Windows.Forms.Button();
+            groupBoxKeyBinding.Controls.Add(buttonClearKeyBindings);
+            buttonClearKeyBindings.Location = new System.Drawing.Point(120, 51);
+            buttonClearKeyBindings.Name = "buttonClearKeyBindings";
+            buttonClearKeyBindings.Size = new System.Drawing.Size(100, 23);
+            buttonClearKeyBindings.TabIndex = 2;
+            buttonClearKeyBindings.Text = "Clear";
+            buttonClearKeyBindings.UseVisualStyleBackColor = true;
+            buttonClearKeyBindings.Click += new System.EventHandler(this.ButtonClearKeyBindings_Click);
+            
             //
             // Form1
             //

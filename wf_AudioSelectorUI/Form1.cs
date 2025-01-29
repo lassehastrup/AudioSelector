@@ -12,10 +12,11 @@ namespace wf_AudioSelectorUI
     {
         private static Form1 _instance;
         public static Form1 Instance => _instance;
-
         private readonly CoreAudioController _audioController;
         private readonly Dictionary<string, List<Keys>> _deviceShortcuts = new Dictionary<string, List<Keys>>();
+        private NotifyIcon _notifyIcon;
         private bool _isRecording = false;
+        private ContextMenuStrip _contextMenu;
 
         public Form1()
         {
@@ -23,11 +24,53 @@ namespace wf_AudioSelectorUI
             _instance = this;
             _audioController = new CoreAudioController();
             LoadSettings();
+            InitializeNotifyIcon();
+        }
+
+        private void InitializeNotifyIcon()
+        {
+            _notifyIcon = new NotifyIcon
+            {
+                Icon = SystemIcons.Application,
+                Visible = true,
+                Text = "Audio Selector UI"
+            };
+
+            _contextMenu = new ContextMenuStrip();
+            _contextMenu.Items.Add("Show", null, ShowForm);
+            _contextMenu.Items.Add("Exit", null, ExitApplication);
+
+            _notifyIcon.ContextMenuStrip = _contextMenu;
+            _notifyIcon.DoubleClick += ShowForm;
+        }
+
+        private void ShowForm(object sender, EventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            ShowInTaskbar = true;
+        }
+
+        private void ExitApplication(object sender, EventArgs e)
+        {
+            _notifyIcon.Visible = false;
+            Application.Exit();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            if (WindowState == FormWindowState.Minimized)
+            {
+                Hide();
+                ShowInTaskbar = false;
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             SaveSettings();
+            _notifyIcon.Visible = false;
             base.OnFormClosing(e);
         }
 
@@ -131,6 +174,13 @@ namespace wf_AudioSelectorUI
 
         private void buttonViewKeybinds_Click(object sender, EventArgs e)
         {
+            UpdateListView();
+        }
+        
+        private void ButtonClearKeyBindings_Click(object sender, EventArgs e)
+        {
+            _deviceShortcuts.Clear();
+            labelShortcut.Text = "No shortcut assigned";
             UpdateListView();
         }
 
@@ -248,6 +298,7 @@ namespace wf_AudioSelectorUI
             }
         }
     }
+
 
     public class AudioSelectorSettings
     {

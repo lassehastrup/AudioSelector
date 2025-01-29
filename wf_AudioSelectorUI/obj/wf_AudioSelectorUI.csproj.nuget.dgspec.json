@@ -51,10 +51,6 @@
             "MouseKeyHook": {
               "target": "Package",
               "version": "[5.7.1, )"
-            },
-            "System.ServiceProcess.ServiceController": {
-              "target": "Package",
-              "version": "[9.0.0, )"
             }
           },
           "imports": [

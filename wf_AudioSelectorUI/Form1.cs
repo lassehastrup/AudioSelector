@@ -10,6 +10,9 @@ namespace wf_AudioSelectorUI
 {
     public partial class Form1 : Form
     {
+        private static Form1 _instance;
+        public static Form1 Instance => _instance;
+
         private readonly CoreAudioController _audioController;
         private readonly Dictionary<string, List<Keys>> _deviceShortcuts = new Dictionary<string, List<Keys>>();
         private bool _isRecording = false;
@@ -17,6 +20,7 @@ namespace wf_AudioSelectorUI
         public Form1()
         {
             InitializeComponent();
+            _instance = this;
             _audioController = new CoreAudioController();
             LoadSettings();
         }
@@ -194,6 +198,22 @@ namespace wf_AudioSelectorUI
             return true; // Indicate that the key has been handled
         }
 
+        public void HandleGlobalKeyDown(KeyEventArgs e)
+        {
+            foreach (var deviceShortcut in _deviceShortcuts)
+            {
+                if (deviceShortcut.Value.Contains(e.KeyCode))
+                {
+                    var device = _audioController.GetPlaybackDevices()
+                        .FirstOrDefault(d => d.FullName == deviceShortcut.Key);
+                    if (device != null && device.State != DeviceState.Active)
+                    {
+                        device.SetAsDefault();
+                    }
+                }
+            }
+        }
+
         private const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
 
         private void SaveSettings()
@@ -234,5 +254,4 @@ namespace wf_AudioSelectorUI
         public string SelectedDevice { get; set; }
         public Dictionary<string, List<Keys>> DeviceShortcuts { get; set; }
     }
-    
 }

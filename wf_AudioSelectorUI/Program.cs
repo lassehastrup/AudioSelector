@@ -1,16 +1,25 @@
-namespace wf_AudioSelectorUI;
+using System;
+using System.Windows.Forms;
+using Gma.System.MouseKeyHook;
 
-internal static class Program
+namespace wf_AudioSelectorUI
 {
-    /// <summary>
-    ///     The main entry point for the application.
-    /// </summary>
-    [STAThread]
-    private static void Main()
+    internal static class Program
     {
-        // To customize application configuration such as set high DPI settings or default font,
-        // see https://aka.ms/applicationconfiguration.
-        ApplicationConfiguration.Initialize();
-        Application.Run(new Form1());
+        private static IKeyboardMouseEvents _globalHook;
+
+        [STAThread]
+        private static void Main()
+        {
+            ApplicationConfiguration.Initialize();
+            _globalHook = Hook.GlobalEvents();
+            _globalHook.KeyDown += GlobalHook_KeyDown;
+            Application.Run(new Form1());
+        }
+
+        private static void GlobalHook_KeyDown(object sender, KeyEventArgs e)
+        {
+            Form1.Instance.HandleHotkey(e);
+        }
     }
 }

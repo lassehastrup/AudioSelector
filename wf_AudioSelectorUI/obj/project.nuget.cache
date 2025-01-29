@@ -1,14 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "aP5QIsj1u24=",
+  "dgSpecHash": "SBFf023qYvE=",
   "success": true,
   "projectFilePath": "C:\\code\\personal\\Application\\AudioSelector\\wf_AudioSelectorUI\\wf_AudioSelectorUI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Lasse\\.nuget\\packages\\audioswitcher.audioapi\\3.0.0\\audioswitcher.audioapi.3.0.0.nupkg.sha512",
     "C:\\Users\\Lasse\\.nuget\\packages\\audioswitcher.audioapi.coreaudio\\3.0.3\\audioswitcher.audioapi.coreaudio.3.0.3.nupkg.sha512",
-    "C:\\Users\\Lasse\\.nuget\\packages\\mousekeyhook\\5.7.1\\mousekeyhook.5.7.1.nupkg.sha512",
-    "C:\\Users\\Lasse\\.nuget\\packages\\system.diagnostics.eventlog\\9.0.0\\system.diagnostics.eventlog.9.0.0.nupkg.sha512",
-    "C:\\Users\\Lasse\\.nuget\\packages\\system.serviceprocess.servicecontroller\\9.0.0\\system.serviceprocess.servicecontroller.9.0.0.nupkg.sha512"
+    "C:\\Users\\Lasse\\.nuget\\packages\\mousekeyhook\\5.7.1\\mousekeyhook.5.7.1.nupkg.sha512"
   ],
   "logs": [
     {

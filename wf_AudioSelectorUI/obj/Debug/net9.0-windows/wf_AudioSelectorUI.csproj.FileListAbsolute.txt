@@ -39,3 +39,5 @@ C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-w
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.sourcelink.json
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.Form1.resources
 C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\obj\Debug\net9.0-windows\wf_AudioSelectorUI.csproj.GenerateResource.cache
+C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\bin\Debug\net9.0-windows\System.ServiceProcess.ServiceController.dll
+C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\bin\Debug\net9.0-windows\runtimes\win\lib\net9.0\System.ServiceProcess.ServiceController.dll

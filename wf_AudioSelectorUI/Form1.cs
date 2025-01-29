@@ -176,7 +176,7 @@ namespace wf_AudioSelectorUI
         {
             UpdateListView();
         }
-        
+
         private void ButtonClearKeyBindings_Click(object sender, EventArgs e)
         {
             _deviceShortcuts.Clear();
@@ -280,10 +280,24 @@ namespace wf_AudioSelectorUI
 
         private void LoadSettings()
         {
-            if (!File.Exists(SettingsFilePath)) return;
+            const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
+            if (!File.Exists(SettingsFilePath))
+            {
+                Console.WriteLine("Settings file not found. Creating default settings file.");
+                var defaultSettings = new AudioSelectorSettings
+                {
+                    DeviceShortcuts = new Dictionary<string, List<Keys>>
+                    {
+                        { "Default Device", new List<Keys> { Keys.Control, Keys.Alt, Keys.D } }
+                    }
+                };
+                var json = JsonSerializer.Serialize(defaultSettings, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(SettingsFilePath, json);
+                Console.WriteLine("Default settings file created.");
+            }
 
-            var json = File.ReadAllText(SettingsFilePath);
-            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(json);
+            var settingsJson = File.ReadAllText(SettingsFilePath);
+            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(settingsJson);
 
             if (settings != null)
             {
@@ -291,10 +305,12 @@ namespace wf_AudioSelectorUI
                 foreach (var kvp in settings.DeviceShortcuts)
                 {
                     _deviceShortcuts[kvp.Key] = kvp.Value;
+                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", kvp.Value)}");
                 }
-
-                comboBoxAudioDevices.SelectedItem = settings.SelectedDevice;
-                UpdateListView();
+            }
+            else
+            {
+                Console.WriteLine("Failed to deserialize settings.");
             }
         }
     }

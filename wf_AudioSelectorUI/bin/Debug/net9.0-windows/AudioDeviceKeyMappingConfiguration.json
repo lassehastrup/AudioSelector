@@ -1,11 +1,9 @@
 {
   "SelectedDevice": "Line (Steinberg UR44)",
   "DeviceShortcuts": {
-    "Headphones (HP USB-C Dock Audio Headset)": [
-      65618
-    ],
     "Line (Steinberg UR44)": [
-      83
+      65552,
+      65618
     ]
   }
 }

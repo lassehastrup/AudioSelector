@@ -66,23 +66,21 @@ namespace wf_AudioSelectorUI
         {
             foreach (var deviceShortcut in _deviceShortcuts)
             {
-                if (deviceShortcut.Value.Contains(e.KeyCode))
+                var keys = deviceShortcut.Value;
+                if (keys.Count == 0) continue;
+
+                // Check if the first key is a modifier key
+                var firstKey = keys[0];
+                if (e.Modifiers.HasFlag(firstKey) && keys.Skip(1).All(k => e.KeyCode == k))
                 {
-                    Console.WriteLine($"Key Combination Matched: {e.KeyCode} for device {deviceShortcut.Key}");
                     var device = _audioController.GetPlaybackDevices()
                         .FirstOrDefault(d => d.FullName == deviceShortcut.Key);
 
-                    if (device == null)
+                    if (device != null)
                     {
-                        Console.WriteLine($"Device not found: {deviceShortcut.Key}");
-                        continue;
+                        device.SetAsDefault();
+                        Console.WriteLine($"Audio device switched to: {device.FullName}");
                     }
-
-                    Console.WriteLine($"Found device: {device.FullName}, State: {device.State}");
-
-                    // Set the device as default regardless of its current state
-                    device.SetAsDefault();
-                    Console.WriteLine($"Audio device switched to: {device.FullName}");
                 }
             }
         }
@@ -119,8 +117,12 @@ namespace wf_AudioSelectorUI
                 _deviceShortcuts.Clear();
                 foreach (var kvp in settings.DeviceShortcuts)
                 {
-                    _deviceShortcuts[kvp.Key] = kvp.Value;
-                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", kvp.Value)}");
+                    var filteredKeys = kvp.Value
+                        .Select(key => (Keys)Enum.Parse(typeof(Keys), key))
+                        .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
+                        .ToList();
+                    _deviceShortcuts[kvp.Key] = filteredKeys;
+                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", filteredKeys)}");
                 }
             }
             else

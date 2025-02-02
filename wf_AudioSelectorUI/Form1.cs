@@ -139,13 +139,22 @@ namespace wf_AudioSelectorUI
             _isRecording = !_isRecording;
             buttonAddKeyBindingToList.Text = _isRecording ? "Done adding" : "Add keybinding";
             labelShortcut.Text = _isRecording ? "Press a key combination..." : "Press 'Add keybinding' to start";
-            labelShortcut.BackColor =
-                _isRecording ? System.Drawing.Color.LightYellow : System.Drawing.Color.Transparent;
+            labelShortcut.BackColor = _isRecording ? System.Drawing.Color.LightCyan : System.Drawing.Color.Transparent;
+
+            if (_isRecording && comboBoxAudioDevices.SelectedItem != null)
+            {
+                var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
+                if (_deviceShortcuts.ContainsKey(selectedDeviceName))
+                {
+                    _deviceShortcuts[selectedDeviceName].Clear();
+                }
+            }
 
             // Update the ListView when done adding key bindings
             if (!_isRecording)
             {
                 UpdateListView();
+                SaveSettings(); // Save settings after adding key bindings
             }
         }
 
@@ -166,7 +175,8 @@ namespace wf_AudioSelectorUI
             foreach (var device in _deviceShortcuts)
             {
                 var item = new ListViewItem(device.Key);
-                var keyNames = device.Value.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString());
+                var keyNames = device.Value.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString())
+                    .Distinct();
                 item.SubItems.Add(string.Join(", ", keyNames));
                 listViewKeybinds.Items.Add(item);
             }
@@ -186,10 +196,34 @@ namespace wf_AudioSelectorUI
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            // Log the keyData information
-            Console.WriteLine($"KeyData: {keyData}");
+            if (!_isRecording || comboBoxAudioDevices.SelectedItem == null)
+            {
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
 
-            // Dictionary to map Keys values to their string representations
+            var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
+            if (!_deviceShortcuts.TryGetValue(selectedDeviceName, out var keys))
+            {
+                keys = new List<Keys>();
+                _deviceShortcuts[selectedDeviceName] = keys;
+            }
+
+            // Split keyData into individual keys
+            var individualKeys = keyData.ToString().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(k => (Keys)Enum.Parse(typeof(Keys), k))
+                .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
+                .ToList();
+
+            // Add the individual keys to the list of keys for the selected device
+            foreach (var key in individualKeys)
+            {
+                if (!keys.Contains(key))
+                {
+                    keys.Add(key);
+                }
+            }
+
+            // Update the label with the key combination
             var keyNamesMap = new Dictionary<Keys, string>
             {
                 { Keys.Control, "Ctrl" },
@@ -200,50 +234,9 @@ namespace wf_AudioSelectorUI
                 { Keys.Menu, "Alt" }
             };
 
-            // List to store the key names
-            var keyNames = new List<string>();
+            var keyNames = keys.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()).Distinct();
+            labelShortcut.Text = string.Join(" + ", keyNames);
 
-            // Check for specific key values and add their names to the list
-            foreach (var key in keyNamesMap.Keys)
-            {
-                if (keyData.HasFlag(key))
-                {
-                    keyNames.Add(keyNamesMap[key]);
-                }
-            }
-
-            // Remove the modifier keys from keyData to get the non-modifier key
-            var nonModifierKey = keyData & ~Keys.Control & ~Keys.Shift & ~Keys.Alt;
-            if (nonModifierKey != Keys.None && !keyNamesMap.ContainsKey(nonModifierKey))
-            {
-                keyNames.Add(nonModifierKey.ToString());
-            }
-
-            // Remove duplicates
-            keyNames = keyNames.Distinct().ToList();
-
-            // Join the key names with " + " and update the label
-            var formattedKeys = string.Join(" + ", keyNames);
-
-            if (!_isRecording || comboBoxAudioDevices.SelectedItem == null)
-            {
-                labelShortcut.Text = formattedKeys;
-                return base.ProcessCmdKey(ref msg, keyData);
-            }
-
-            var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
-            if (!_deviceShortcuts.TryGetValue(selectedDeviceName, out _))
-            {
-                _deviceShortcuts[selectedDeviceName] = new List<Keys>();
-            }
-
-            // Update the keyData for the selected device
-            _deviceShortcuts[selectedDeviceName] = new List<Keys> { keyData };
-
-            // Update the label with the key combination
-            labelShortcut.Text = string.Join(" + ",
-                _deviceShortcuts[selectedDeviceName]
-                    .Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()));
             UpdateListView(); // Update the ListView whenever a new keybinding is added
             return true; // Indicate that the key has been handled
         }
@@ -252,30 +245,64 @@ namespace wf_AudioSelectorUI
         {
             foreach (var deviceShortcut in _deviceShortcuts)
             {
-                if (deviceShortcut.Value.Contains(e.KeyCode))
+                var keys = deviceShortcut.Value
+                    .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton).ToList();
+                if (keys.Count == 0) continue;
+
+                // Check if the first key is a modifier key
+                var firstKey = keys[0];
+                if (e.Modifiers.HasFlag(firstKey) && keys.Skip(1).All(k => e.KeyCode == k))
                 {
                     var device = _audioController.GetPlaybackDevices()
                         .FirstOrDefault(d => d.FullName == deviceShortcut.Key);
-                    if (device != null && device.State != DeviceState.Active)
+
+                    if (device != null)
                     {
                         device.SetAsDefault();
+                        Console.WriteLine($"Audio device switched to: {device.FullName}");
                     }
                 }
             }
         }
 
-        private const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
+        private static readonly string SettingsFilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "AudioDeviceKeyMappingConfiguration.json"
+        );
 
         private void SaveSettings()
         {
-            var settings = new AudioSelectorSettings
+            try
             {
-                SelectedDevice = comboBoxAudioDevices.SelectedItem?.ToString(),
-                DeviceShortcuts = _deviceShortcuts
-            };
+                var keyNamesMap = new Dictionary<Keys, string>
+                {
+                    { Keys.Control, "Ctrl" },
+                    { Keys.ControlKey, "Ctrl" },
+                    { Keys.Shift, "Shift" },
+                    { Keys.ShiftKey, "Shift" },
+                    { Keys.Alt, "Alt" },
+                    { Keys.Menu, "Alt" }
+                };
 
-            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(SettingsFilePath, json);
+                var mappedDeviceShortcuts = _deviceShortcuts.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()).ToList()
+                );
+
+                var settings = new AudioSelectorSettings
+                {
+                    SelectedDevice = comboBoxAudioDevices.SelectedItem?.ToString(),
+                    DeviceShortcuts = mappedDeviceShortcuts
+                };
+
+                var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(SettingsFilePath, json);
+                Console.WriteLine("Settings saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to save settings: {ex.Message}");
+            }
         }
 
         private void LoadSettings()
@@ -283,29 +310,35 @@ namespace wf_AudioSelectorUI
             const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
             if (!File.Exists(SettingsFilePath))
             {
-                Console.WriteLine("Settings file not found. Creating default settings file.");
-                var defaultSettings = new AudioSelectorSettings
-                {
-                    DeviceShortcuts = new Dictionary<string, List<Keys>>
-                    {
-                        { "Default Device", new List<Keys> { Keys.Control, Keys.Alt, Keys.D } }
-                    }
-                };
-                var json = JsonSerializer.Serialize(defaultSettings, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(SettingsFilePath, json);
-                Console.WriteLine("Default settings file created.");
+                Console.WriteLine("Settings file not found.");
+                return;
             }
 
-            var settingsJson = File.ReadAllText(SettingsFilePath);
-            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(settingsJson);
+            var json = File.ReadAllText(SettingsFilePath);
+            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(json);
 
             if (settings != null)
             {
                 _deviceShortcuts.Clear();
                 foreach (var kvp in settings.DeviceShortcuts)
                 {
-                    _deviceShortcuts[kvp.Key] = kvp.Value;
-                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", kvp.Value)}");
+                    var filteredKeys = new List<Keys>();
+                    foreach (var key in kvp.Value)
+                    {
+                        if (Enum.TryParse(typeof(Keys), key.ToString(), out var parsedKey) && parsedKey is Keys validKey)
+                        {
+                            if (validKey != Keys.None && validKey != Keys.LButton && validKey != Keys.RButton && validKey != Keys.XButton1)
+                            {
+                                filteredKeys.Add(validKey);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Invalid key: {key}");
+                        }
+                    }
+                    _deviceShortcuts[kvp.Key] = filteredKeys;
+                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", filteredKeys)}");
                 }
             }
             else
@@ -319,6 +352,6 @@ namespace wf_AudioSelectorUI
     public class AudioSelectorSettings
     {
         public string SelectedDevice { get; set; }
-        public Dictionary<string, List<Keys>> DeviceShortcuts { get; set; }
+        public Dictionary<string, List<string>> DeviceShortcuts { get; set; }
     }
 }

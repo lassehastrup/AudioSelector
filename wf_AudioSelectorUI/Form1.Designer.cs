@@ -178,7 +178,7 @@
             Controls.Add(groupBoxKeyBinding);
             Controls.Add(groupBoxAudioDevices);
             Icon = ((System.Drawing.Icon)resources.GetObject("$this.Icon"));
-            Opacity = 0.8D;
+            Opacity = 0.92D;
             Text = "Audio Selector";
             TopMost = true;
             Load += Form1_Load;

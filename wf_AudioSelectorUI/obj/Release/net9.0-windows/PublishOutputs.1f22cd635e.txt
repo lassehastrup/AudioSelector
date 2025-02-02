@@ -1,8 +1,0 @@
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\wf_AudioSelectorUI.exe
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\wf_AudioSelectorUI.dll
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\wf_AudioSelectorUI.deps.json
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\wf_AudioSelectorUI.runtimeconfig.json
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\wf_AudioSelectorUI.pdb
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\AudioSwitcher.AudioApi.dll
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\AudioSwitcher.AudioApi.CoreAudio.dll
-C:\code\personal\Application\AudioSelector\wf_AudioSelectorUI\publish\Gma.System.MouseKeyHook.dll

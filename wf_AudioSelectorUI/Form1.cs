@@ -1,3 +1,4 @@
+using Gma.System.MouseKeyHook;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -5,7 +6,6 @@ using AudioSwitcher.AudioApi;
 using AudioSwitcher.AudioApi.CoreAudio;
 using System.IO;
 using System.Text.Json;
-using System.Xml;
 
 namespace wf_AudioSelectorUI
 {
@@ -18,6 +18,7 @@ namespace wf_AudioSelectorUI
         private NotifyIcon _notifyIcon;
         private bool _isRecording = false;
         private ContextMenuStrip _contextMenu;
+        private IKeyboardMouseEvents _globalHook;
 
         public Form1()
         {
@@ -26,6 +27,49 @@ namespace wf_AudioSelectorUI
             _audioController = new CoreAudioController();
             LoadSettings();
             InitializeNotifyIcon();
+            SetupGlobalKeyHandling();
+        }
+
+        private void SetupGlobalKeyHandling()
+        {
+            _globalHook = Hook.GlobalEvents();
+            _globalHook.KeyDown += GlobalHook_KeyDown;
+        }
+
+        private void GlobalHook_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!_isRecording || comboBoxAudioDevices.SelectedItem == null)
+            {
+                return;
+            }
+
+            var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
+            if (!_deviceShortcuts.TryGetValue(selectedDeviceName, out var keys))
+            {
+                keys = new List<Keys>();
+                _deviceShortcuts[selectedDeviceName] = keys;
+            }
+
+            if (e.KeyCode != Keys.None && !keys.Contains(e.KeyCode))
+            {
+                keys.Add(e.KeyCode);
+            }
+
+            // Ensure only a maximum of two keys are recorded
+            if (keys.Count > 2)
+            {
+                keys = keys.Take(2).ToList();
+                _deviceShortcuts[selectedDeviceName] = keys;
+                _isRecording = false; // Stop recording after two keys
+                buttonAddKeyBindingToList.Text = "Add keybinding";
+                labelShortcut.BackColor = System.Drawing.Color.Transparent;
+            }
+
+            // Update the label with the key combination
+            var keyNames = keys.Select(k => k.ToString());
+            labelShortcut.Text = string.Join(" + ", keyNames);
+
+            UpdateListView(); // Update the ListView whenever a new keybinding is added
         }
 
         private void InitializeNotifyIcon()
@@ -72,6 +116,7 @@ namespace wf_AudioSelectorUI
         {
             SaveSettings();
             _notifyIcon.Visible = false;
+            _globalHook.Dispose(); // Dispose the global hook
             base.OnFormClosing(e);
         }
 
@@ -184,60 +229,6 @@ namespace wf_AudioSelectorUI
             UpdateListView();
         }
 
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (!_isRecording || comboBoxAudioDevices.SelectedItem == null)
-            {
-                return base.ProcessCmdKey(ref msg, keyData);
-            }
-
-            var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
-            if (!_deviceShortcuts.TryGetValue(selectedDeviceName, out var keys))
-            {
-                keys = new List<Keys>();
-                _deviceShortcuts[selectedDeviceName] = keys;
-            }
-
-            // Split keyData into individual keys and take only the first key
-            var firstKey = keyData.ToString().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(k => (Keys)Enum.Parse(typeof(Keys), k))
-                .FirstOrDefault();
-
-            keys.Add(firstKey);
-
-
-            // Update the label with the key combination
-            var keyNames = keys.Select(k => k.ToString());
-            labelShortcut.Text = string.Join(" + ", keyNames);
-
-            UpdateListView(); // Update the ListView whenever a new keybinding is added
-            return true; // Indicate that the key has been handled
-        }
-
-        public void HandleGlobalKeyDown(KeyEventArgs e)
-        {
-            foreach (var deviceShortcut in _deviceShortcuts)
-            {
-                var keys = deviceShortcut.Value
-                    .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton).ToList();
-                if (keys.Count == 0) continue;
-
-                // Check if the first key is a modifier key
-                var firstKey = keys[0];
-                if (e.Modifiers.HasFlag(firstKey) && keys.Skip(1).All(k => e.KeyCode == k))
-                {
-                    var device = _audioController.GetPlaybackDevices()
-                        .FirstOrDefault(d => d.FullName == deviceShortcut.Key);
-
-                    if (device != null)
-                    {
-                        device.SetAsDefault();
-                        Console.WriteLine($"Audio device switched to: {device.FullName}");
-                    }
-                }
-            }
-        }
-
         private static readonly string SettingsFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "AudioDeviceKeyMappingConfiguration.json"
@@ -249,7 +240,7 @@ namespace wf_AudioSelectorUI
             {
                 var mappedDeviceShortcuts = _deviceShortcuts.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Select(k => k.ToString()).ToList()
+                    kvp => kvp.Value.Take(2).Select(k => k.ToString()).ToList() // Ensure only two keys are saved
                 );
 
                 var settings = new AudioSelectorSettings
@@ -260,7 +251,6 @@ namespace wf_AudioSelectorUI
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(SettingsFilePath, json);
-                // Console.WriteLine("Settings saved successfully.");
                 Console.WriteLine(json);
             }
             catch (Exception ex)
@@ -307,7 +297,6 @@ namespace wf_AudioSelectorUI
             }
         }
     }
-
 
     public class AudioSelectorSettings
     {

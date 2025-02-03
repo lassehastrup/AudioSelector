@@ -18,6 +18,7 @@ namespace wf_AudioSelectorUI
         private readonly CoreAudioController _audioController;
         private readonly Dictionary<string, List<Keys>> _deviceShortcuts = new Dictionary<string, List<Keys>>();
         private NotifyIcon _notifyIcon;
+        private HashSet<Keys> _pressedKeys = new HashSet<Keys>();
 
         public BackgroundProcess()
         {
@@ -33,7 +34,7 @@ namespace wf_AudioSelectorUI
         {
             _notifyIcon = new NotifyIcon
             {
-                Icon = SystemIcons.Application,
+                Icon = new Icon("audioAppSwitcher.ico.ico"), // Ensure the path is correct
                 Visible = true,
                 Text = "Audio Selector UI"
             };
@@ -54,24 +55,30 @@ namespace wf_AudioSelectorUI
         {
             var globalHook = Hook.GlobalEvents();
             globalHook.KeyDown += GlobalHook_KeyDown;
+            globalHook.KeyUp += GlobalHook_KeyUp;
         }
 
         private void GlobalHook_KeyDown(object sender, KeyEventArgs e)
         {
+            _pressedKeys.Add(e.KeyCode);
             Console.WriteLine($"Key Pressed: {e.KeyCode}");
-            HandleGlobalKeyDown(e);
+            HandleGlobalKeyDown();
         }
 
-        public void HandleGlobalKeyDown(KeyEventArgs e)
+        private void GlobalHook_KeyUp(object sender, KeyEventArgs e)
+        {
+            _pressedKeys.Remove(e.KeyCode);
+        }
+
+        public void HandleGlobalKeyDown()
         {
             foreach (var deviceShortcut in _deviceShortcuts)
             {
                 var keys = deviceShortcut.Value;
                 if (keys.Count == 0) continue;
 
-                // Check if the first key is a modifier key
-                var firstKey = keys[0];
-                if (e.Modifiers.HasFlag(firstKey) && keys.Skip(1).All(k => e.KeyCode == k))
+                // Check if the key combination matches
+                if (keys.All(k => _pressedKeys.Contains(k)))
                 {
                     var device = _audioController.GetPlaybackDevices()
                         .FirstOrDefault(d => d.FullName == deviceShortcut.Key);
@@ -105,11 +112,34 @@ namespace wf_AudioSelectorUI
         {
             string userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string settingsFilePath = Path.Combine(userProfilePath, "AudioDeviceKeyMappingConfiguration.json");
-            
+
             if (!File.Exists(settingsFilePath))
             {
                 Console.WriteLine("Settings file not found.");
                 return;
+            }
+
+            var json = File.ReadAllText(settingsFilePath);
+            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(json);
+
+            if (settings != null)
+            {
+                _deviceShortcuts.Clear();
+                foreach (var kvp in settings.DeviceShortcuts)
+                {
+                    var filteredKeys = new List<Keys>();
+                    foreach (var key in kvp.Value)
+                    {
+                        filteredKeys.Add((Keys)Enum.Parse(typeof(Keys), key));
+                    }
+
+                    _deviceShortcuts[kvp.Key] = filteredKeys;
+                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", filteredKeys)}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to deserialize settings.");
             }
         }
     }

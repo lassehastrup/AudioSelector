@@ -6,11 +6,12 @@ namespace wf_AudioSelectorUI
     internal static class Program
     {
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
             Application.Run(new BackgroundProcess());
+            Application.Run(new Form1());
+            
         }
     }
 }

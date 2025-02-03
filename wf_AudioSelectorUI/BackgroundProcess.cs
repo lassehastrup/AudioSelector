@@ -100,34 +100,16 @@ namespace wf_AudioSelectorUI
                 }
             }
         }
+
         private void LoadSettings()
         {
-            const string SettingsFilePath = "AudioDeviceKeyMappingConfiguration.json";
-            if (!File.Exists(SettingsFilePath))
+            string userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string settingsFilePath = Path.Combine(userProfilePath, "AudioDeviceKeyMappingConfiguration.json");
+            
+            if (!File.Exists(settingsFilePath))
             {
                 Console.WriteLine("Settings file not found.");
                 return;
-            }
-
-            var json = File.ReadAllText(SettingsFilePath);
-            var settings = JsonSerializer.Deserialize<AudioSelectorSettings>(json);
-
-            if (settings != null)
-            {
-                _deviceShortcuts.Clear();
-                foreach (var kvp in settings.DeviceShortcuts)
-                {
-                    var filteredKeys = kvp.Value
-                        .Select(key => (Keys)Enum.Parse(typeof(Keys), key))
-                        .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
-                        .ToList();
-                    _deviceShortcuts[kvp.Key] = filteredKeys;
-                    Console.WriteLine($"Loaded key combination for device {kvp.Key}: {string.Join(", ", filteredKeys)}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Failed to deserialize settings.");
             }
         }
     }

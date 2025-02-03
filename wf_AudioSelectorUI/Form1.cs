@@ -19,16 +19,6 @@ namespace wf_AudioSelectorUI
         private bool _isRecording = false;
         private ContextMenuStrip _contextMenu;
 
-        private readonly Dictionary<Keys, string> keyNamesMap = new Dictionary<Keys, string>
-        {
-            // { Keys.Control, "LControlKey" },
-            // // { Keys.ControlKey, "LControlKey" },
-            // { Keys.Shift, "LShiftKey" },
-            // // { Keys.ShiftKey, "LShiftKey" },
-            // { Keys.Alt, "Alt" },
-            // { Keys.Menu, "Alt" }
-        };
-
         public Form1()
         {
             InitializeComponent();
@@ -116,7 +106,7 @@ namespace wf_AudioSelectorUI
             var selectedDeviceName = comboBoxAudioDevices.SelectedItem.ToString();
             if (_deviceShortcuts.TryGetValue(selectedDeviceName, out var keys))
             {
-                var keyNames = keys.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString());
+                var keyNames = keys.ToString();
                 labelShortcut.Text = string.Join(", ", keyNames);
             }
             else
@@ -166,13 +156,14 @@ namespace wf_AudioSelectorUI
             foreach (var deviceShortcut in _deviceShortcuts)
             {
                 var keys = deviceShortcut.Value
-                    .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
+                    .Where(key =>
+                        key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
                     .Take(2) // Ensure only a maximum of two keys are taken
                     .ToList();
 
                 if (keys.Count > 0)
                 {
-                    var keyNames = keys.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()).Distinct();
+                    var keyNames = keys.Select(k => k.ToString());
                     var combinedKeys = string.Join(" + ", keyNames);
                     var listViewItem = new ListViewItem(deviceShortcut.Key);
                     listViewItem.SubItems.Add(combinedKeys);
@@ -197,10 +188,6 @@ namespace wf_AudioSelectorUI
         {
             if (!_isRecording || comboBoxAudioDevices.SelectedItem == null)
             {
-                if (keyData.ToString().Contains("|"))
-                {
-                    Console.WriteLine("KeyData contains a key combination: " + keyData);
-                }
                 return base.ProcessCmdKey(ref msg, keyData);
             }
 
@@ -211,24 +198,16 @@ namespace wf_AudioSelectorUI
                 _deviceShortcuts[selectedDeviceName] = keys;
             }
 
-            // Split keyData into individual keys
-            var individualKeys = keyData.ToString().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
+            // Split keyData into individual keys and take only the first key
+            var firstKey = keyData.ToString().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(k => (Keys)Enum.Parse(typeof(Keys), k))
-                .Where(key => key != Keys.None && key != Keys.LButton && key != Keys.RButton && key != Keys.XButton1)
-                .ToList();
+                .FirstOrDefault();
 
-            // Add only the first key if there are multiple values
-            if (individualKeys.Count > 0)
-            {
-                var firstKey = individualKeys[0];
-                if (!keys.Contains(firstKey))
-                {
-                    keys.Add(firstKey);
-                }
-            }
+            keys.Add(firstKey);
+
 
             // Update the label with the key combination
-            var keyNames = keys.Select(k => keyNamesMap.ContainsKey(k) ? keyNamesMap[k] : k.ToString()).Distinct();
+            var keyNames = keys.Select(k => k.ToString());
             labelShortcut.Text = string.Join(" + ", keyNames);
 
             UpdateListView(); // Update the ListView whenever a new keybinding is added
@@ -270,7 +249,7 @@ namespace wf_AudioSelectorUI
             {
                 var mappedDeviceShortcuts = _deviceShortcuts.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => new List<string> { keyNamesMap.ContainsKey(kvp.Value.FirstOrDefault()) ? keyNamesMap[kvp.Value.FirstOrDefault()] : kvp.Value.FirstOrDefault().ToString() }
+                    kvp => kvp.Value.Select(k => k.ToString()).ToList()
                 );
 
                 var settings = new AudioSelectorSettings
@@ -281,7 +260,8 @@ namespace wf_AudioSelectorUI
 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(SettingsFilePath, json);
-                Console.WriteLine("Settings saved successfully.");
+                // Console.WriteLine("Settings saved successfully.");
+                Console.WriteLine(json);
             }
             catch (Exception ex)
             {
@@ -313,19 +293,7 @@ namespace wf_AudioSelectorUI
                     var filteredKeys = new List<Keys>();
                     foreach (var key in kvp.Value)
                     {
-                        if (Enum.TryParse(typeof(Keys), key.ToString(), out var parsedKey) &&
-                            parsedKey is Keys validKey)
-                        {
-                            if (validKey != Keys.None && validKey != Keys.LButton && validKey != Keys.RButton &&
-                                validKey != Keys.XButton1)
-                            {
-                                filteredKeys.Add(validKey);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Invalid key: {key}");
-                        }
+                        filteredKeys.Add((Keys)Enum.Parse(typeof(Keys), key));
                     }
 
                     _deviceShortcuts[kvp.Key] = filteredKeys;

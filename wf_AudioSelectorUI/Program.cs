@@ -10,7 +10,7 @@ namespace wf_AudioSelectorUI
         {
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1());
-            // Application.Run(new BackgroundProcess());
+            Application.Run(new BackgroundProcess());
         }
     }
 }
